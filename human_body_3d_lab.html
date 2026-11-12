@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMAN BODY 3D — Interactive Anatomy Lab</title>
+<style>
+:root{--bg:#07111d;--panel:#101f30;--cyan:#63e6ff;--muted:#9bb0c5;--white:#eff8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 35%,#17334b 0,#091725 45%,#050b13 100%);color:var(--white);font-family:Inter,system-ui,Arial,sans-serif;overflow:hidden}
+header{position:absolute;z-index:5;top:0;left:0;right:0;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(#06101ddd,transparent)}
+.brand{font-weight:900;letter-spacing:2px;font-size:15px}.brand span{color:var(--cyan)}.tag{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:4px}
+.badge{border:1px solid #63e6ff55;color:var(--cyan);padding:8px 12px;border-radius:30px;font-size:11px;letter-spacing:1px}
+main{height:100vh;display:grid;grid-template-columns:minmax(250px,320px) 1fr minmax(240px,290px);gap:14px;padding:86px 18px 18px}
+.panel{background:linear-gradient(145deg,#12263adf,#091725e8);border:1px solid #8bdfff22;border-radius:18px;padding:18px;backdrop-filter:blur(14px);box-shadow:0 18px 55px #0005;min-height:0}
+h1{font-size:21px;margin:0 0 8px}h2{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--cyan);margin:0 0 14px}
+.sub{color:var(--muted);font-size:12px;line-height:1.55;margin:0 0 18px}
+.organ-list{display:grid;gap:8px}.organ{width:100%;text-align:left;color:var(--white);background:#ffffff08;border:1px solid #ffffff12;border-radius:11px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.2s}.organ:hover,.organ.active{border-color:var(--cyan);background:#63e6ff18;transform:translateX(2px)}.organ small{color:var(--muted);font-size:10px}.dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.stage{position:relative;min-width:0;border:1px solid #8bdfff22;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#17364c55,transparent 58%)}canvas{display:block;width:100%;height:100%}.hint{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);padding:9px 13px;border:1px solid #ffffff22;border-radius:30px;background:#07111dcc;color:#b9d2e5;font-size:11px;white-space:nowrap}
+.info-title{font-size:23px;font-weight:800;margin:5px 0 10px}.info-text{font-size:13px;color:#b4c7d8;line-height:1.65}.fact{margin-top:18px;padding:13px;border-radius:12px;background:#63e6ff12;border:1px solid #63e6ff30;font-size:12px;line-height:1.5}.fact b{color:var(--cyan);display:block;margin-bottom:5px}
+.controls{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}.btn{border:1px solid #63e6ff55;background:#63e6ff12;color:var(--cyan);border-radius:9px;padding:9px 11px;font-size:11px;cursor:pointer}.btn:hover{background:#63e6ff2b}
+.footer{position:absolute;bottom:8px;right:24px;color:#607c91;font-size:9px;letter-spacing:1px}
+@media(max-width:850px){main{grid-template-columns:1fr 1.4fr;padding:78px 10px 10px;gap:9px}.stage{grid-column:2;grid-row:1/3}.right{grid-column:1;grid-row:2}.panel{padding:12px}.organ{padding:9px;font-size:12px}.info-title{font-size:18px}.sub{font-size:11px}}
+@media(max-width:560px){header{padding:13px}.badge{font-size:9px;padding:7px}main{display:flex;flex-direction:column;padding:70px 9px 9px;gap:8px;overflow:auto;height:100dvh}.stage{height:48vh;min-height:300px;order:0;flex:none}.left{order:1}.right{order:2}.panel{flex:none}.organ-list{grid-template-columns:repeat(2,1fr)}.organ{font-size:11px;padding:8px}.sub{margin-bottom:10px}.footer{display:none}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">HUMAN<span>LAB</span> / 3D</div><div class="tag">INTERACTIVE ANATOMY EXPERIENCE</div></div><div class="badge">● LIVE 3D MODEL</div></header>
+<main>
+<section class="panel left">
+<h1>Explore the human body</h1><p class="sub">Select an organ to discover what it does. Drag to rotate the model and scroll to zoom.</p>
+<h2>Organ systems</h2>
+<div class="organ-list" id="organList"></div>
+<div class="controls"><button class="btn" id="reset">↻ RESET VIEW</button><button class="btn" id="sound">♫ SOUND: OFF</button></div>
+</section>
+<section class="stage" id="stage"><div class="hint">↔ DRAG TO ROTATE &nbsp; • &nbsp; SCROLL TO ZOOM &nbsp; • &nbsp; TAP AN ORGAN</div></section>
+<section class="panel right">
+<h2>ANATOMY INSIGHT</h2><div class="info-title" id="organName">The human body</div><div class="info-text" id="organDesc">Your body is an incredible system made of organs that work together. Choose an organ from the list or tap it in the 3D model to learn more.</div>
+<div class="fact"><b>QUICK FACT</b><span id="organFact">An adult human body has 206 bones and many organs working together every second.</span></div>
+<div class="fact"><b>SCIENCE NOTE</b><span id="organNote">This is an educational 3D model. Shapes are simplified to make the major organs easy to explore.</span></div>
+</section>
+</main><div class="footer">MADE FOR CURIOUS MINDS • HUMANLAB 3D</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const stage=document.getElementById('stage');
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,1,.1,100);camera.position.set(0,1.2,8.7);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,.1,0);controls.minDistance=5;controls.maxDistance=13;
+scene.add(new THREE.HemisphereLight(0xbceaff,0x142033,2));
+const key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(4,6,7);scene.add(key);
+const rim=new THREE.PointLight(0x36dfff,35,15);rim.position.set(-3,2,-3);scene.add(rim);
+const body=new THREE.Group();scene.add(body);
+const mat=(color,rough=.5,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+const skin=mat(0x8ab4c8,.42,.15), dark=mat(0x27485b,.5,.2), bone=mat(0xd8e9e8,.35), heartMat=mat(0xe84c67,.28), lungMat=mat(0x69b8d5,.35), liverMat=mat(0x9c573e), stomachMat=mat(0xe8a65f), brainMat=mat(0xe9a6c7), kidneyMat=mat(0x9b4965);
+function sphere(parent,name,pos,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material);m.name=name;m.position.set(...pos);m.scale.set(...scale);parent.add(m);return m}
+function capsule(parent,pos,r,len,material){const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,8,16),material);m.position.set(...pos);parent.add(m);return m}
+// Stylized translucent mannequin
+const shell=new THREE.MeshStandardMaterial({color:0x5ca4bd,transparent:true,opacity:.17,roughness:.25,metalness:.25,side:THREE.DoubleSide});
+sphere(body,'torso',[0,.25,0],[.88,1.48,.48],shell);sphere(body,'head',[0,2.18,0],[.48,.57,.43],shell);
+capsule(body,[-1.02,.25,0],.19,1.55,shell).rotation.z=-.12;capsule(body,[1.02,.25,0],.19,1.55,shell).rotation.z=.12;
+capsule(body,[-.43,-1.48,0],.23,1.65,shell).rotation.z=.03;capsule(body,[.43,-1.48,0],.23,1.65,shell).rotation.z=-.03;
+const organs={};
+organs.brain=sphere(body,'brain',[0,2.22,.04],[.34,.31,.32],brainMat);
+organs.heart=sphere(body,'heart',[.13,.75,.47],[.23,.31,.19],heartMat);organs.heart.rotation.z=-.25;
+organs.leftLung=sphere(body,'lungs',[-.36,.64,.36],[.29,.57,.17],lungMat);
+organs.rightLung=sphere(body,'lungs',[.47,.64,.36],[.29,.57,.17],lungMat);
+organs.liver=sphere(body,'liver',[-.25,-.12,.37],[.47,.25,.18],liverMat);
+organs.stomach=sphere(body,'stomach',[.27,-.23,.39],[.28,.36,.18],stomachMat);organs.stomach.rotation.z=-.35;
+organs.leftKidney=sphere(body,'kidneys',[-.48,-.48,.27],[.16,.25,.14],kidneyMat);
+organs.rightKidney=sphere(body,'kidneys',[.48,-.48,.27],[.16,.25,.14],kidneyMat);
+organs.intestines=sphere(body,'intestines',[0,-.79,.36],[.46,.36,.16],mat(0xe5bd83));
+const spine=capsule(body,[0,-.25,-.23],.075,2.45,bone);
+const data=[
+{id:'brain',label:'Brain',desc:'The brain is the control centre of your nervous system. It helps you think, learn, remember, feel emotions and coordinate movement.',fact:'Your brain contains around 86 billion neurons.',note:'It communicates with the rest of the body through the spinal cord and nerves.'},
+{id:'heart',label:'Heart',desc:'The heart is a muscular pump. It sends blood around your body, delivering oxygen and nutrients and carrying away waste.',fact:'Your heart beats roughly 100,000 times a day.',note:'Blood travels through a network of arteries, veins and capillaries.'},
+{id:'lungs',label:'Lungs',desc:'Your lungs help you breathe. Oxygen moves from the air into your blood, while carbon dioxide moves out when you exhale.',fact:'Most people breathe about 12–20 times per minute at rest.',note:'The tiny air sacs inside the lungs are called alveoli.'},
+{id:'liver',label:'Liver',desc:'The liver processes nutrients, helps clean the blood, stores energy and produces bile to help digest fats.',fact:'The liver is the largest internal organ in the human body.',note:'It can repair and regenerate some of its own tissue.'},
+{id:'stomach',label:'Stomach',desc:'The stomach mixes food with acid and digestive enzymes, breaking it down before it moves into the small intestine.',fact:'Your stomach lining renews itself regularly.',note:'Digestion is a team effort involving the mouth, stomach and intestines.'},
+{id:'kidneys',label:'Kidneys',desc:'The kidneys filter your blood, remove extra water and waste, and help balance salts in your body.',fact:'Most people have two kidneys, each containing about a million nephrons.',note:'Urine travels from the kidneys to the bladder through tubes called ureters.'},
+{id:'intestines',label:'Intestines',desc:'Your intestines continue digestion and absorb nutrients and water. Helpful microbes also live in your gut.',fact:'The small intestine is several metres long.',note:'Nutrients pass through the intestinal wall into the bloodstream.'}
+];
+const list=document.getElementById('organList');
+data.forEach(d=>{const b=document.createElement('button');b.className='organ';b.innerHTML=`<span>${d.label}<br><small>Explore organ</small></span><i class="dot"></i>`;b.onclick=()=>select(d.id);b.dataset.id=d.id;list.appendChild(b)});
+function select(id){const d=data.find(x=>x.id===id);if(!d)return;document.getElementById('organName').textContent=d.label;document.getElementById('organDesc').textContent=d.desc;document.getElementById('organFact').textContent=d.fact;document.getElementById('organNote').textContent=d.note;document.querySelectorAll('.organ').forEach(b=>b.classList.toggle('active',b.dataset.id===id));body.children.forEach(o=>{if(o.isMesh)o.material.emissive=new THREE.Color(0x000000)});const key=id==='lungs'?'leftLung':id==='kidneys'?'leftKidney':id;const obj=organs[key];if(obj&&obj.material.emissive)obj.material.emissive.set(0x183b50);beep()}
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('pointerdown',e=>{const r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(body.children,true);if(hits.length){let n=hits[0].object.name;if(n==='leftLung'||n==='rightLung')n='lungs';if(n==='leftKidney'||n==='rightKidney')n='kidneys';if(data.some(d=>d.id===n))select(n)}});
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}new ResizeObserver(resize).observe(stage);resize();
+document.getElementById('reset').onclick=()=>{camera.position.set(0,1.2,8.7);controls.target.set(0,.1,0);controls.update();select('brain')};
+let audio=false,ctx;function beep(){if(!audio)return;ctx??=new AudioContext();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=620;g.gain.setValueAtTime(.06,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);o.start();o.stop(ctx.currentTime+.12)}
+document.getElementById('sound').onclick=()=>{audio=!audio;document.getElementById('sound').textContent='♫ SOUND: '+(audio?'ON':'OFF');if(audio)beep()};
+select('brain');
+function animate(){requestAnimationFrame(animate);controls.update();body.rotation.y+=.0015;renderer.render(scene,camera)}animate();
+</script>
+</body></html>
